@@ -1,2 +1,2 @@
 # asdf-gradle
-gradle plugin for the asdf version manager
+[gradle](https://gradle.org/) plugin for the asdf version manager
