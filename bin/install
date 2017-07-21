@@ -1,0 +1,12 @@
+#!/bin/sh
+# instructions taken straight from https://gradle.org/install/#manually
+if [ "$ASDF_INSTALL_TYPE" = "ref" ]
+then
+	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
+else
+	mkdir -p "$ASDF_INSTALL_PATH"
+	cd "$ASDF_INSTALL_PATH" || exit 1
+	curl -O https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
+	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
+fi
