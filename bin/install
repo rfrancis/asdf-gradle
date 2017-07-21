@@ -9,4 +9,5 @@ else
 	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip
 	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
 	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
+	mv gradle-${ASDF_INSTALL_VERSION}/* .
 fi
