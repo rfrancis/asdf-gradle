@@ -1,2 +1,6 @@
 #!/bin/sh 
-curl -s https://services.gradle.org/distributions/ | grep -e "distributions.*-bin.zip\"" | sed -e "s#^.*distributions/gradle-##" -e "s#-bin.zip.*##" | sort -t. -n | paste -s -d" " -
+curl -s https://services.gradle.org/distributions/ \
+    | grep -e  "distributions.*-bin.zip\"" \
+    | sed -e "s#^.*distributions/gradle-##" -e "s#-bin.zip.*##" \
+    | tac \
+    | paste -s -d " " -
