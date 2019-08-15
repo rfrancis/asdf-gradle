@@ -12,7 +12,7 @@ asdf plugin-add gradle https://github.com/rfrancis/asdf-gradle.git
 
 ## Use
 
-Check out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage versions of HashiCorp tools.
+Check out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage versions of other tools.
 
 
 NEEDED: Someone to take over maintenance of this plugin.
