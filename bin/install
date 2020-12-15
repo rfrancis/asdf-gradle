@@ -6,8 +6,8 @@ checkShasum ()
   local authentic_checksum="${2}"
 
   if $(command -v sha256sum >/dev/null 2>&1); then
-	sha256sum \
-		-c <<<"$authentic_checksum $archive_file_name"
+        sha256sum \
+                -c <<<"$authentic_checksum $archive_file_name"
   elif $(command -v shasum >/dev/null 2>&1); then
     shasum \
       -a 256 \
@@ -18,32 +18,65 @@ checkShasum ()
   fi
 }
 
-
 # instructions taken straight from https://gradle.org/install/#manually
-if [ "$ASDF_INSTALL_TYPE" = "ref" ]
-then
-	echo "start clone $ASDF_INSTALL_VERSION"
-	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
-else
-	echo "start install $ASDF_INSTALL_VERSION"
-	mkdir -p "$ASDF_INSTALL_PATH"
-	cd "$ASDF_INSTALL_PATH" || exit 1
-	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip
-	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip.sha256
 
-	archive_file_name=$PWD/gradle-${ASDF_INSTALL_VERSION}-bin.zip
-	authentic_checksum_file=$archive_file_name.sha256
-	authentic_checksum=$(cat $authentic_checksum_file)
-
-	echo 'start check sha256sum'
-	if ! checkShasum "$archive_file_name" "$authentic_checksum"; then
-        echo "Authenticity of package archive can not be assured. Exiting." >&2
-        exit 1
+installGradleSig()
+{
+  if [ "$ASDF_INSTALL_TYPE" = "ref" ]
+  then
+  	echo "start clone $ASDF_INSTALL_VERSION"
+  	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
+  else
+  	echo "start install $ASDF_INSTALL_VERSION"
+  	mkdir -p "$ASDF_INSTALL_PATH"
+  	cd "$ASDF_INSTALL_PATH" || exit 1
+  	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip.sha256  
+  	archive_file_name=$PWD/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	authentic_checksum_file=$archive_file_name.sha256
+  	authentic_checksum=$(cat $authentic_checksum_file)
+  
+  	echo 'start check sha256sum'
+  	if ! checkShasum "$archive_file_name" "$authentic_checksum"; then
+          echo "Authenticity of package archive can not be assured. Exiting." >&2
+          exit 1
     fi
+  
+  	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	mv gradle-${ASDF_INSTALL_VERSION}/* .
+  	rm -rf gradle-${ASDF_INSTALL_VERSION}
+  	rm $authentic_checksum_file
+  fi
+}
 
-	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
-	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
-	mv gradle-${ASDF_INSTALL_VERSION}/* .
-	rm -rf gradle-${ASDF_INSTALL_VERSION}
-	rm $authentic_checksum_file
+installGradleNoSign()
+{
+  if [ "$ASDF_INSTALL_TYPE" = "ref" ]
+  then
+  	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
+  else
+  	mkdir -p "$ASDF_INSTALL_PATH"
+  	cd "$ASDF_INSTALL_PATH" || exit 1
+  	curl -OJL https://services.gradle.org/distributions/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  	mv gradle-${ASDF_INSTALL_VERSION}/* .
+    rm -rf gradle-${ASDF_INSTALL_VERSION}
+  fi
+}
+
+if [ ! -z GRADLE_SIGNATURE_CHECK  -a  "$GRADLE_SIGNATURE_CHECK" = "yes" ]
+  then
+    ## check if GRADLE_SIGNATURE_CHECK and its "yes"
+    installGradleSig
+  elif [ ! -z GRADLE_SIGNATURE_CHECK  -a  "$GRADLE_SIGNATURE_CHECK" = "no" ]
+    then
+      ## check if GRADLE_SIGNATURE_CHECK and its "no"
+      installGradleNoSign
+  else
+    ## only install with sign check
+    installGradleSig
+
 fi
+
