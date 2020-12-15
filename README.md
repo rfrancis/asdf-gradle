@@ -14,5 +14,16 @@ asdf plugin-add gradle https://github.com/rfrancis/asdf-gradle.git
 
 Check out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage versions of other tools.
 
+When installing Gradle using `asdf install` and you not have been plan check signature, you can set `no` using `export GRADLE_SIGNATURE_CHECK=no` example:
+```
+
+export GRADLE_SIGNATURE_CHECK=no 
+
+```
+Observation:
+
+* `GRADLE_SIGNATURE_CHECK` - `yes` is default.The `yes` check the signature and `no` not check the signature
+
+
 
 NEEDED: Someone to take over maintenance of this plugin.
