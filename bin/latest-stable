@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+query="${1:-}"
+asdf list all gradle "$query" | grep -ivE "(^Available version:|-src|-dev|-latest|-stm|[-\\.]rc|-milestone|-alpha|-beta|[-\\.]pre|-next|(a|b|c)[0-9]+|snapshot|master)" | sed 's/^[[:space:]]\+//' | tail -1
