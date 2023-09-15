@@ -43,6 +43,12 @@ installGradleSig()
           echo "Authenticity of package archive can not be assured. Exiting." >&2
           exit 1
     fi
+
+    echo 'start unzip check'
+    if ! command -v unzip  &> /dev/null; then
+	    echo "Unzip is not installed. Please install unzip and try again."
+	    exit 1
+    fi
   
   	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
   	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
@@ -61,6 +67,13 @@ installGradleNoSign()
   	mkdir -p "$ASDF_INSTALL_PATH"
   	cd "$ASDF_INSTALL_PATH" || exit 1
   	curl -OJL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+
+    echo 'start unzip check'
+    if ! command -v unzip  &> /dev/null; then
+      echo "Unzip is not installed. Please install unzip and try again."
+      exit 1
+    fi
+
   	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
   	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
   	mv gradle-${ASDF_INSTALL_VERSION}/* .
