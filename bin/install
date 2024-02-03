@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export GRADLE_DISTRIBUTION_URL=${GRADLE_DISTRIBUTION_URL:=https://services.gradle.org/distributions}
 
