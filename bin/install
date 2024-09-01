@@ -1,97 +1,90 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-export GRADLE_DISTRIBUTION_URL=${GRADLE_DISTRIBUTION_URL:=https://services.gradle.org/distributions}
+export GRADLE_DISTRIBUTION_URL=${GRADLE_DISTRIBUTION_URL:-https://services.gradle.org/distributions}
 
-checkShasum ()
-{
+has_command() {
+  command -v "$1" >&/dev/null
+}
+
+log() {
+  echo >&2 "asdf-gradle: $@"
+}
+
+die() {
+  log "$@"
+  exit 1
+}
+
+ensure_command() {
+  local cmd="$1"
+  [ -z "${2-}" ] || shift
+  if ! has_command "$cmd"; then
+    die "$cmd is missing. Please install it and try again."
+  fi
+  "$cmd" "$@"
+}
+
+checkShasum() {
   local archive_file_name="${1}"
   local authentic_checksum="${2}"
 
-  if $(command -v sha256sum >/dev/null 2>&1); then
-        sha256sum \
-                -c <<<"$authentic_checksum  $archive_file_name"
-  elif $(command -v shasum >/dev/null 2>&1); then
-    shasum \
-      -a 256 \
-      -c <<<"$authentic_checksum  $archive_file_name"
+  log 'check sha256sum'
+  if has_command sha256sum; then
+    sha256sum -c <<<"$authentic_checksum  $archive_file_name"
+  elif has_command shasum; then
+    shasum -a 256 -c <<<"$authentic_checksum  $archive_file_name"
   else
-    echo "sha256sum or shasum is not available for use" >&2
-    return 1
+    die 'sha256sum and shasum commands missing'
   fi
 }
 
 # instructions taken straight from https://gradle.org/install/#manually
 
-installGradleSig()
-{
-  if [ "$ASDF_INSTALL_TYPE" = "ref" ]
-  then
-  	echo "start clone $ASDF_INSTALL_VERSION"
-  	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
-  else
-  	echo "start install $ASDF_INSTALL_VERSION"
-  	mkdir -p "$ASDF_INSTALL_PATH"
-  	cd "$ASDF_INSTALL_PATH" || exit 1
-  	curl -OJL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	curl -OJL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip.sha256  
-  	archive_file_name=$PWD/gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	authentic_checksum_file=$archive_file_name.sha256
-  	authentic_checksum=$(cat $authentic_checksum_file)
-  
-  	echo 'start check sha256sum'
-  	if ! checkShasum "$archive_file_name" "$authentic_checksum"; then
-          echo "Authenticity of package archive can not be assured. Exiting." >&2
-          exit 1
-    fi
-
-    echo 'start unzip check'
-    if ! command -v unzip  &> /dev/null; then
-	    echo "Unzip is not installed. Please install unzip and try again."
-	    exit 1
-    fi
-  
-  	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	mv gradle-${ASDF_INSTALL_VERSION}/* .
-  	rm -rf gradle-${ASDF_INSTALL_VERSION}
-  	rm $authentic_checksum_file
-  fi
+installGradleRef() {
+ 	log "clone $ASDF_INSTALL_VERSION"
+  ensure_command git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH" --depth 1
 }
 
-installGradleNoSign()
-{
-  if [ "$ASDF_INSTALL_TYPE" = "ref" ]
-  then
-  	git clone "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
-  else
-  	mkdir -p "$ASDF_INSTALL_PATH"
-  	cd "$ASDF_INSTALL_PATH" || exit 1
-  	curl -OJL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+installGradleSig() {
+  log "install $ASDF_INSTALL_VERSION"
+  mkdir -p "$ASDF_INSTALL_PATH"
+  cd "$ASDF_INSTALL_PATH"
+  ensure_command curl -OJfSL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  curl -OJfSL ${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip.sha256  
+  local archive_file_name=$PWD/gradle-${ASDF_INSTALL_VERSION}-bin.zip
+  local authentic_checksum_file=$archive_file_name.sha256
+  local authentic_checksum=$(cat "$authentic_checksum_file")
 
-    echo 'start unzip check'
-    if ! command -v unzip  &> /dev/null; then
-      echo "Unzip is not installed. Please install unzip and try again."
-      exit 1
-    fi
-
-  	unzip gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	rm gradle-${ASDF_INSTALL_VERSION}-bin.zip
-  	mv gradle-${ASDF_INSTALL_VERSION}/* .
-    rm -rf gradle-${ASDF_INSTALL_VERSION}
+  if ! checkShasum "$archive_file_name" "$authentic_checksum"; then
+    die 'Authenticity of package archive can not be assured. Exiting.'
   fi
+
+  ensure_command unzip "gradle-${ASDF_INSTALL_VERSION}-bin.zip"
+  rm -f "gradle-${ASDF_INSTALL_VERSION}-bin.zip"
+  mv "gradle-${ASDF_INSTALL_VERSION}"/* .
+  rm -rf gradle-${ASDF_INSTALL_VERSION}
+  rm -f "$authentic_checksum_file"
 }
 
-if [ ! -z GRADLE_SIGNATURE_CHECK  -a  "$GRADLE_SIGNATURE_CHECK" = "yes" ]
-  then
-    ## check if GRADLE_SIGNATURE_CHECK and its "yes"
-    installGradleSig
-  elif [ ! -z GRADLE_SIGNATURE_CHECK  -a  "$GRADLE_SIGNATURE_CHECK" = "no" ]
-    then
-      ## check if GRADLE_SIGNATURE_CHECK and its "no"
-      installGradleNoSign
-  else
-    ## only install with sign check
-    installGradleSig
+installGradleNoSign() {
+  log "install (SECURITY WARNING! not checking signatures) $ASDF_INSTALL_VERSION"
+  mkdir -p "$ASDF_INSTALL_PATH"
+  cd "$ASDF_INSTALL_PATH"
+  ensure_command curl -OJfSL "${GRADLE_DISTRIBUTION_URL}/gradle-${ASDF_INSTALL_VERSION}-bin.zip"
 
+  ensure_command unzip "gradle-${ASDF_INSTALL_VERSION}-bin.zip"
+  rm -r "gradle-${ASDF_INSTALL_VERSION}-bin.zip"
+  mv "gradle-${ASDF_INSTALL_VERSION}"/* .
+  rm -rf "gradle-${ASDF_INSTALL_VERSION}"
+}
+
+if [ "${ASDF_INSTALL_TYPE-}" = ref ]; then
+  installGradleRef
+elif [ "${GRADLE_SIGNATURE_CHECK-}" = no ]; then
+  ## check if GRADLE_SIGNATURE_CHECK and its "no"
+  installGradleNoSign
+else
+  ## only install with sign check: default, and when GRADLE_SIGNATURE_CHECK == 'yes'
+  installGradleSig
 fi
-
