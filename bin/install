@@ -31,7 +31,7 @@ checkShasum() {
 
   log 'check sha256sum'
   if has_command sha256sum; then
-    sha256sum -c <<<"$authentic_checksum  $archive_file_name"
+    sha256sum -c <<<"$authentic_checksum  $archive_file_name" -
   elif has_command shasum; then
     shasum -a 256 -c <<<"$authentic_checksum  $archive_file_name"
   else
