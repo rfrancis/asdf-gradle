@@ -6,8 +6,20 @@
 
 ## Install
 
-```sh
+```bash
 asdf plugin-add gradle https://github.com/rfrancis/asdf-gradle.git
+```
+
+and install new versions like this:
+
+```bash
+asdf install gradle latest
+```
+
+and switch versions like this:
+
+```bash
+asdf global gradle <version>
 ```
 
 ## Use
