@@ -7,7 +7,7 @@
 ## Install
 
 ```sh
-asdf plugin-add gradle https://github.com/rfrancis/asdf-gradle.git
+asdf plugin add gradle https://github.com/rfrancis/asdf-gradle.git
 ```
 
 ## Use
