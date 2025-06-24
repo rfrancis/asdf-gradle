@@ -10,6 +10,18 @@
 asdf plugin add gradle https://github.com/rfrancis/asdf-gradle.git
 ```
 
+and install new versions like this:
+
+```sh
+asdf install gradle latest
+```
+
+and switch versions like this:
+
+```sh
+asdf global gradle <version>
+```
+
 ## Use
 
 Check out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage versions of other tools.
